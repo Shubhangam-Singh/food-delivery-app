@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 import './RestaurantDetail.css';
 
@@ -372,3 +373,23 @@ const RestaurantDetail = () => {
 };
 
 export default RestaurantDetail;
+
+// Note: Replace the existing addToCart function with this:
+/*
+const { addItem } = useCart();
+
+const addToCart = (menuItem) => {
+  if (!isAuthenticated) {
+    toast.error('Please login to add items to cart');
+    navigate('/login');
+    return;
+  }
+
+  addItem(menuItem, restaurant.id, {
+    id: restaurant.id,
+    name: restaurant.name,
+    deliveryFee: restaurant.deliveryFee,
+    address: restaurant.address
+  });
+};
+*/

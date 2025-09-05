@@ -136,7 +136,7 @@ const restaurantController = {
     }
   },
 
-  // GET single restaurant with full details
+  // GET single restaurant with full details - ✅ FIXED ORDERBY
   getRestaurantById: async (req, res) => {
     try {
       const { id } = req.params;
@@ -155,7 +155,7 @@ const restaurantController = {
           },
           menuItems: {
             where: { isAvailable: true },
-            orderBy: { category: 'asc' }
+            orderBy: { category: { name: 'asc' } } // ✅ FIXED: Sort by category name
           },
           reviews: {
             include: {
@@ -226,7 +226,7 @@ const restaurantController = {
     }
   },
 
-  // GET restaurant menu with categories
+  // GET restaurant menu with categories - ✅ FIXED ORDERBY
   getRestaurantMenu: async (req, res) => {
     try {
       const { id } = req.params;
@@ -241,7 +241,7 @@ const restaurantController = {
       const menuItems = await prisma.menuItem.findMany({
         where: whereClause,
         orderBy: [
-          { category: 'asc' },
+          { category: { name: 'asc' } }, // ✅ FIXED: Sort by category name
           { name: 'asc' }
         ]
       });
