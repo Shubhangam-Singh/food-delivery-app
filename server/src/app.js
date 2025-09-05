@@ -55,3 +55,7 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+// Order and Address routes
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/addresses', require('./routes/addresses'));
