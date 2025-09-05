@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,6 +16,7 @@ model User {
   phone       String   @unique
   role        UserRole @default(CUSTOMER)
   isActive    Boolean  @default(true)
+  avatar      String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -40,6 +40,9 @@ model Restaurant {
   rating      Float    @default(0)
   deliveryFee Float    @default(0)
   minOrder    Float    @default(0)
+  cuisineType String[]
+  openTime    String?
+  closeTime   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -48,7 +51,7 @@ model Restaurant {
   addressId   String   @unique
 
   // Relations
-  owner       User        @relation(fields: [ownerId], references: [id])
+  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   address     Address     @relation(fields: [addressId], references: [id])
   menuItems   MenuItem[]
   orders      Order[]
@@ -65,6 +68,8 @@ model MenuItem {
   image       String?
   category    String
   isAvailable Boolean     @default(true)
+  isVeg       Boolean     @default(true)
+  spiceLevel  SpiceLevel? @default(MEDIUM)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -72,7 +77,7 @@ model MenuItem {
   restaurantId String
 
   // Relations
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   orderItems   OrderItem[]
 
   @@map("menu_items")
@@ -84,8 +89,10 @@ model Address {
   city       String
   state      String
   zipCode    String
+  landmark   String?
   latitude   Float?
   longitude  Float?
+  isDefault  Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -93,7 +100,7 @@ model Address {
   userId     String?
 
   // Relations
-  user       User?       @relation(fields: [userId], references: [id])
+  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   restaurant Restaurant?
   orders     Order[]
 
@@ -107,7 +114,10 @@ model Order {
   totalAmount   Float
   deliveryFee   Float
   tax           Float
+  discount      Float       @default(0)
   instructions  String?
+  paymentMethod String?
+  paymentStatus PaymentStatus @default(PENDING)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -139,24 +149,25 @@ model OrderItem {
   menuItemId String
 
   // Relations
-  order      Order    @relation(fields: [orderId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
 
   @@map("order_items")
 }
 
 model Delivery {
-  id              String         @id @default(cuid())
-  status          DeliveryStatus @default(ASSIGNED)
-  estimatedTime   DateTime?
-  actualTime      DateTime?
-  deliveryPersonName String?
+  id                  String         @id @default(cuid())
+  status              DeliveryStatus @default(ASSIGNED)
+  estimatedTime       DateTime?
+  actualTime          DateTime?
+  deliveryPersonName  String?
   deliveryPersonPhone String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  trackingCode        String?        @unique
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
   // Relations
-  orders          Order[]
+  orders              Order[]
 
   @@map("deliveries")
 }
@@ -203,4 +214,18 @@ enum DeliveryStatus {
   PICKED_UP
   ON_THE_WAY
   DELIVERED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum SpiceLevel {
+  MILD
+  MEDIUM
+  SPICY
+  EXTRA_SPICY
 }
