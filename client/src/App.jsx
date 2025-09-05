@@ -6,24 +6,28 @@ import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
+import Restaurants from './pages/Restaurants';
+import RestaurantDetail from './pages/RestaurantDetail';
 import './App.css';
 
-// Home component for landing page
 const Home = () => {
   const { isAuthenticated } = useAuth();
   
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   return (
     <div className="home-container">
       <div className="home-content">
         <h1>🍕 Welcome to Food Delivery</h1>
         <p>Order delicious food from your favorite restaurants</p>
         <div className="home-actions">
-          <a href="/login" className="btn btn-primary">Sign In</a>
-          <a href="/register" className="btn btn-secondary">Sign Up</a>
+          <a href="/restaurants" className="btn btn-primary">Browse Restaurants</a>
+          {!isAuthenticated ? (
+            <>
+              <a href="/login" className="btn btn-secondary">Sign In</a>
+              <a href="/register" className="btn btn-secondary">Sign Up</a>
+            </>
+          ) : (
+            <a href="/dashboard" className="btn btn-secondary">My Dashboard</a>
+          )}
         </div>
       </div>
     </div>
@@ -56,6 +60,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
+            <Route path="/restaurants" element={<Restaurants />} />
+            <Route path="/restaurants/:id" element={<RestaurantDetail />} />
             <Route
               path="/dashboard"
               element={
