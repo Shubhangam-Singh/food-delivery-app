@@ -1,0 +1,206 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  phone       String   @unique
+  role        UserRole @default(CUSTOMER)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  addresses   Address[]
+  orders      Order[]
+  reviews     Review[]
+  restaurants Restaurant[] // For restaurant owners
+
+  @@map("users")
+}
+
+model Restaurant {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  image       String?
+  phone       String
+  email       String
+  isActive    Boolean  @default(true)
+  rating      Float    @default(0)
+  deliveryFee Float    @default(0)
+  minOrder    Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Foreign Keys
+  ownerId     String
+  addressId   String   @unique
+
+  // Relations
+  owner       User        @relation(fields: [ownerId], references: [id])
+  address     Address     @relation(fields: [addressId], references: [id])
+  menuItems   MenuItem[]
+  orders      Order[]
+  reviews     Review[]
+
+  @@map("restaurants")
+}
+
+model MenuItem {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  image       String?
+  category    String
+  isAvailable Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Foreign Keys
+  restaurantId String
+
+  // Relations
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  orderItems   OrderItem[]
+
+  @@map("menu_items")
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  street     String
+  city       String
+  state      String
+  zipCode    String
+  latitude   Float?
+  longitude  Float?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Foreign Keys
+  userId     String?
+
+  // Relations
+  user       User?       @relation(fields: [userId], references: [id])
+  restaurant Restaurant?
+  orders     Order[]
+
+  @@map("addresses")
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  status        OrderStatus @default(PENDING)
+  totalAmount   Float
+  deliveryFee   Float
+  tax           Float
+  instructions  String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Foreign Keys
+  customerId    String
+  restaurantId  String
+  addressId     String
+  deliveryId    String?
+
+  // Relations
+  customer      User        @relation(fields: [customerId], references: [id])
+  restaurant    Restaurant  @relation(fields: [restaurantId], references: [id])
+  deliveryAddress Address   @relation(fields: [addressId], references: [id])
+  delivery      Delivery?   @relation(fields: [deliveryId], references: [id])
+  orderItems    OrderItem[]
+  reviews       Review[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  quantity   Int
+  price      Float
+  createdAt  DateTime @default(now())
+
+  // Foreign Keys
+  orderId    String
+  menuItemId String
+
+  // Relations
+  order      Order    @relation(fields: [orderId], references: [id])
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@map("order_items")
+}
+
+model Delivery {
+  id              String         @id @default(cuid())
+  status          DeliveryStatus @default(ASSIGNED)
+  estimatedTime   DateTime?
+  actualTime      DateTime?
+  deliveryPersonName String?
+  deliveryPersonPhone String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relations
+  orders          Order[]
+
+  @@map("deliveries")
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  rating     Int      @db.SmallInt
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Foreign Keys
+  userId       String
+  restaurantId String
+  orderId      String
+
+  // Relations
+  user         User       @relation(fields: [userId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  order        Order      @relation(fields: [orderId], references: [id])
+
+  @@unique([userId, orderId])
+  @@map("reviews")
+}
+
+enum UserRole {
+  CUSTOMER
+  RESTAURANT_OWNER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  ASSIGNED
+  PICKED_UP
+  ON_THE_WAY
+  DELIVERED
+}
